@@ -22,11 +22,21 @@
 
 #define FONT_SPACING 5
 
-Game reset_init(u32 win_width, u32 win_height)
+
+Game generic_init(u32 win_width, u32 win_height)
 {
     Game game = {0};
     game.win_width = win_width;
     game.win_height = win_height;
+
+    game.state = PAUSED;
+    game.frame = 0;
+    return game;
+}
+
+Game reset_init(u32 win_width, u32 win_height)
+{
+    Game game = generic_init(win_width, win_height);
 
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
@@ -38,8 +48,6 @@ Game reset_init(u32 win_width, u32 win_height)
     };
 
     game.reps = RESET_REPS;
-    game.state = PAUSED;
-    game.frame = 0;
     return game;
 }
 
@@ -81,60 +89,38 @@ void ball_render(Ball ball, Color color)
     DrawCircle(ball.x, ball.y, ball.radius, color);
 }
 
-Ball ball_init_vt(u32 win_width, u32 win_height)
-{
-    Ball ball;
-    ball.x = 0.5f * win_width;
-    ball.y = 0.5f * win_height;
-    ball.radius = 0.03f * MIN(win_width, win_height);
-    ball.vx = 0.0f;
-    ball.vy = (win_height / BNF_DURATION) / FPS;
-    ball.is_visable = 1;
-    return ball;
-}
-
-Ball ball_init_hz(u32 win_width, u32 win_height)
-{
-    Ball ball;
-    ball.x = 0.5f * win_width;
-    ball.y = 0.5f * win_height;
-    ball.radius = 0.03f * MIN(win_width, win_height);
-    ball.vx = (win_width / BNF_DURATION) / FPS;
-    ball.vy = 0.0f;
-    ball.is_visable = 1;
-    return ball;
-}
-
 Game back_and_forth_init(u32 win_width, u32 win_height)
 {
-    Game game = {0};
-    game.win_width = win_width;
-    game.win_height = win_height;
+    Game game = generic_init(win_width, win_height);
 
-    Ball ball;
-    ball = ball_init_hz(game.win_width, game.win_height);
-    game.ball[0] = ball;
+    game.ball[0] = (Ball) {
+        .x = 0.5f * win_width,
+        .y = 0.5f * win_height,
+        .radius = 0.03f * MIN(win_width, win_height),
+        .vx = (win_width / BNF_DURATION) / FPS,
+        .vy = 0.0f,
+        .is_visable = 1,
+    };
+
     game.reps = BNF_REPS;
-    game.state = PAUSED;
-    game.frame = 0;
     return game;
 }
 
 Game up_and_down_init(u32 win_width, u32 win_height)
 {
-    Game game = {0};
-    game.win_width = win_width;
-    game.win_height = win_height;
+    Game game = generic_init(win_width, win_height);
 
-    Ball ball;
-    ball = ball_init_vt(game.win_width, game.win_height);
-    game.ball[0] = ball;
+    game.ball[0] = (Ball) {
+        .x = 0.5f * win_width,
+        .y = 0.5f * win_height,
+        .radius = 0.03f * MIN(win_width, win_height),
+        .vx = 0.0f,
+        .vy = (win_height / BNF_DURATION) / FPS,
+        .is_visable = 1,
+    };
     game.reps = BNF_REPS;
-    game.state = PAUSED;
-    game.frame = 0;
     return game;
 }
-
 
 void back_and_forth_update(Game *game)
 {
@@ -166,9 +152,7 @@ void back_and_forth_render(Game game) {
 
 Game flash_init_hz(u32 win_width, u32 win_height)
 {
-    Game game = {0};
-    game.win_width = win_width;
-    game.win_height = win_height;
+    Game game = generic_init(win_width, win_height);
 
     game.ball[0] = (Ball) {
         .x = 0.1f * win_width,
@@ -183,16 +167,12 @@ Game flash_init_hz(u32 win_width, u32 win_height)
     game.ball[1].x = 0.9f * win_width;
 
     game.reps = BNF_REPS;
-    game.state = PAUSED;
-    game.frame = 0;
     return game;
 }
 
 Game flash_init_vt(u32 win_width, u32 win_height)
 {
-    Game game = {0};
-    game.win_width = win_width;
-    game.win_height = win_height;
+    Game game = generic_init(win_width, win_height);
 
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
@@ -207,8 +187,6 @@ Game flash_init_vt(u32 win_width, u32 win_height)
     game.ball[1].y = 0.9f * win_height;
 
     game.reps = BNF_REPS;
-    game.state = PAUSED;
-    game.frame = 0;
     return game;
 }
 
@@ -233,6 +211,17 @@ void flash_update(Game *game)
 
         size_t rand_id = rand() % 2;
         game->ball[rand_id].is_visable = !game->ball[rand_id].is_visable;
+    }
+}
+
+void generic_render(Game game) {
+    ClearBackground(COL_FG);
+
+    size_t i;
+    for (i = 0; i < sizeof(game.ball) / sizeof(*game.ball); ++i) {
+        if (game.ball[i].is_visable) {
+            ball_render(game.ball[i], COL_RED);
+        }
     }
 }
 
@@ -264,17 +253,17 @@ int main(void)
         {
             .init = reset_init,
             .update = reset_update,
-            .render = back_and_forth_render,
+            .render = generic_render,
         },
         {
             .init = back_and_forth_init,
             .update = back_and_forth_update,
-            .render = back_and_forth_render,
+            .render = generic_render,
         },
         {
             .init = up_and_down_init,
             .update = back_and_forth_update,
-            .render = back_and_forth_render,
+            .render = generic_render,
         },
         {
             .init = flash_init_hz,
