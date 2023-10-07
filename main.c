@@ -256,23 +256,6 @@ int main(void)
     getentropy(&seed, sizeof seed);
     srand(seed);
 
-    /*
-    Circle *circle = circle_new();
-    circle_push(circle, BACK_AND_FORTH);
-    circle_push(circle, BLINK);
-    circle_push(circle, SHAKE_OPOSITE);
-    circle_close(circle);
-    printf("Val: %d\n", circle->head->next->val);
-    printf("Val: %d\n", circle->head->next->next->val);
-    circle_shift_head(circle);
-    printf("Val: %d\n", circle->head->val);
-    circle_shift_head(circle);
-    printf("Val: %d\n", circle->head->val);
-    circle_shift_head(circle);
-    printf("Val: %d\n", circle->head->val);
-    circle_shift_head(circle);
-    */
-    
     InitWindow(INIT_WIDTH, INIT_HEIGHT, "Exercise");
     SetTargetFPS(FPS);
 
@@ -305,6 +288,8 @@ int main(void)
         },
     };
 
+    size_t game_amount = sizeof(games) / sizeof (*games);
+
     u32 width = INIT_WIDTH;
     u32 height = INIT_HEIGHT;
 
@@ -325,11 +310,7 @@ int main(void)
         }
 
         if (IsKeyPressed(KEY_N)) {
-            if (sel < 4) {
-                ++sel;
-            } else {
-                sel = 0;
-            }
+            sel = (sel + 1) % game_amount;
             games[sel].game = games[sel].init(width, height);
         }
 
