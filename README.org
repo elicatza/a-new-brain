@@ -1,0 +1,16 @@
+* A New Brain
+  Got some videos for balance exercise, but decided to make it with raylib instead.
+
+** Dependencies
+   - Raylib
+   - Linux
+
+** Building
+   #+begin_src bash
+   ./build.sh
+   #+end_src
+
+** Running
+   #+begin_src bash
+   ./a-new-brain
+   #+end_src

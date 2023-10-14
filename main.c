@@ -296,7 +296,6 @@ int main(void)
     Vector2 center;
     u32 sel = 0;
 
-    // TODO games, dt, pass frame
     while (!WindowShouldClose()) {
         if (IsWindowResized() || games[sel].game.frame == 0) {
             width = GetScreenWidth();
