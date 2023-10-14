@@ -8,19 +8,21 @@
 
 
 #define COLLISION_PERCENT 0.1f
+#define BALL_SZ 0.03f
+#define BALL_THICK 0.005f
 
-#define FLASH_DURATION 0.3f
-#define FLASH_INTERVAL 1.5f
+#define FLASH_DURATION 0.2f
+#define FLASH_INTERVAL 1.3f
 #define FLASH_REPS 30
 
 #define RESET_REPS 15
 #define RESET_LAP_DURATION 2
 #define RESET_LAP_WAIT 0.5
 
-#define BNF_REPS 10
-#define BNF_DURATION 3.0f
+#define BNF_REPS 15
+#define BNF_DURATION 2.0f
 
-#define FONT_SPACING 5
+#define FONT_SPACING 10
 
 
 Game generic_init(u32 win_width, u32 win_height)
@@ -41,7 +43,7 @@ Game reset_init(u32 win_width, u32 win_height)
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
         .y = COLLISION_PERCENT * win_height,
-        .radius = 0.03f * MIN(win_width, win_height),
+        .radius = BALL_SZ * MIN(win_width, win_height),
         .vx = 0.0f,
         .vy = ((win_height / RESET_LAP_DURATION) / FPS) * (1 - 2 * COLLISION_PERCENT),
         .is_visable = 1,
@@ -89,6 +91,20 @@ void ball_render(Ball ball, Color color)
     DrawCircle(ball.x, ball.y, ball.radius, color);
 }
 
+void ball_render_cross(Ball ball, Color color, u32 width, u32 height)
+{
+    ball_render(ball, color);
+    float thick = BALL_THICK * MIN(width, height);
+
+    Vector2 left = { ball.x - ball.radius, ball.y };
+    Vector2 right = { ball.x + ball.radius, ball.y };
+    DrawLineEx(left, right, thick, COL_AQUA);
+
+    Vector2 top = { ball.x, ball.y - ball.radius };
+    Vector2 bottom = { ball.x, ball.y + ball.radius };
+    DrawLineEx(top, bottom, thick, COL_AQUA);
+}
+
 Game back_and_forth_init(u32 win_width, u32 win_height)
 {
     Game game = generic_init(win_width, win_height);
@@ -96,7 +112,7 @@ Game back_and_forth_init(u32 win_width, u32 win_height)
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
         .y = 0.5f * win_height,
-        .radius = 0.03f * MIN(win_width, win_height),
+        .radius = BALL_SZ * MIN(win_width, win_height),
         .vx = (win_width / BNF_DURATION) / FPS,
         .vy = 0.0f,
         .is_visable = 1,
@@ -113,7 +129,7 @@ Game up_and_down_init(u32 win_width, u32 win_height)
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
         .y = 0.5f * win_height,
-        .radius = 0.03f * MIN(win_width, win_height),
+        .radius = BALL_SZ * MIN(win_width, win_height),
         .vx = 0.0f,
         .vy = (win_height / BNF_DURATION) / FPS,
         .is_visable = 1,
@@ -145,11 +161,6 @@ void back_and_forth_update(Game *game)
     ball->y += ball->vy;
 }
 
-void back_and_forth_render(Game game) {
-    ClearBackground(COL_FG);
-    ball_render(game.ball[0], COL_RED);
-}
-
 Game flash_init_hz(u32 win_width, u32 win_height)
 {
     Game game = generic_init(win_width, win_height);
@@ -157,7 +168,7 @@ Game flash_init_hz(u32 win_width, u32 win_height)
     game.ball[0] = (Ball) {
         .x = 0.1f * win_width,
         .y = 0.5f * win_height,
-        .radius = 0.03f * MIN(win_width, win_height),
+        .radius = BALL_SZ * MIN(win_width, win_height),
         .vx = 0.0f,
         .vy = 0.0f,
         .is_visable = 1,
@@ -177,7 +188,7 @@ Game flash_init_vt(u32 win_width, u32 win_height)
     game.ball[0] = (Ball) {
         .x = 0.5f * win_width,
         .y = 0.1f * win_height,
-        .radius = 0.03f * MIN(win_width, win_height),
+        .radius = BALL_SZ * MIN(win_width, win_height),
         .vx = 0.0f,
         .vy = 0.0f,
         .is_visable = 1,
@@ -220,7 +231,7 @@ void generic_render(Game game) {
     size_t i;
     for (i = 0; i < sizeof(game.ball) / sizeof(*game.ball); ++i) {
         if (game.ball[i].is_visable) {
-            ball_render(game.ball[i], COL_RED);
+            ball_render_cross(game.ball[i], COL_RED, game.win_width, game.win_height);
         }
     }
 }
@@ -236,7 +247,6 @@ void flash_render(Game game) {
         ball_render(game.ball[1], COL_RED);
     }
 }
-
 
 
 int main(void)
@@ -306,19 +316,19 @@ int main(void)
 
 
         switch (games[sel].game.state) {
-            case (RUNNING):
+            case RUNNING:
                 games[sel].update(&games[sel].game);
                 if (IsKeyPressed(KEY_SPACE)) {
                     games[sel].game.state = PAUSED;
                 }
                 break;
-            case (PAUSED): {
+            case PAUSED: {
                 if (IsKeyPressed(KEY_SPACE)) {
                     games[sel].game.state = RUNNING;
                 }
                 break;
             }
-            case (DONE):
+            case DONE:
                 if (IsKeyPressed(KEY_SPACE)) {
                     games[sel].game = games[sel].init(width, height);
                     games[sel].game.state = RUNNING;
@@ -329,14 +339,14 @@ int main(void)
         BeginDrawing(); {
             games[sel].render(games[sel].game);
             switch (games[sel].game.state) {
-                case (RUNNING):
+                case RUNNING:
                     break;
-                case (PAUSED):
+                case PAUSED:
                     if ((games[sel].game.frame / (FPS / 2)) % 2) {
                         DrawTextEx(GetFontDefault(), "PAUSED", center, font_size, FONT_SPACING, COL_PURPLE);
                     }
                     break;
-                case (DONE):
+                case DONE:
                     DrawTextEx(GetFontDefault(), "FINISHED", center, font_size, FONT_SPACING, COL_PURPLE);
                     break;
             }
